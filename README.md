@@ -44,11 +44,11 @@
 
 1. Клонировать репозиторий:
 ```bash
-git clone https://github.com/your-username/task-api.git
+git clone https://github.com/nikolaevNS1995/task-api.git
 cd task-api
 ```
 
-2. Создать и настроить файл конфигурации `.env` (пример в `.env.example`).
+2. Создать и настроить файл конфигурации `.env`
 
 3. Создать базу данных PostgreSQL:
 ```bash
@@ -65,12 +65,12 @@ go mod download
 
 2. Запустить приложение:
 ```bash
-go run cmd/main.go
+go run cmd/app/main.go
 ```
 
 Или с указанием пути к конфигурационному файлу:
 ```bash
-PATH_CONFIG=./config/.env go run cmd/main.go
+PATH_CONFIG=./config/.env go run cmd/app/main.go
 ```
 
 ## Конфигурация
@@ -88,15 +88,15 @@ APP_ENV="development"                 # Окружение (development, product
 ```
 POSTGRES_DB_HOST="postgres"           # Хост базы данных
 POSTGRES_DB_PORT=5432                 # Порт базы данных
-POSTGRES_DB_USER="task_user"          # Пользователь базы данных
-POSTGRES_DB_PASSWORD="root"          # Пароль базы данных
-POSTGRES_DB_NAME="task_db"           # Имя базы данных
-POSTGRES_DB_SSLMODE="disable"        # Режим SSL для подключения
+POSTGRES_DB_USER="user"               # Пользователь базы данных
+POSTGRES_DB_PASSWORD="password"       # Пароль базы данных
+POSTGRES_DB_NAME="task_db"            # Имя базы данных
+POSTGRES_DB_SSLMODE="disable"         # Режим SSL для подключения
 ```
 
 ### Аутентификация
 ```
-JWT_SECRET="EVntcwjOnxFrWUEZszc0U3svPqaxduK0FKELOcxGKYKeeUTFLg87K1cprf1mVsUZM64h9bV2p4dK2W1S/v5wiw=="  # Секретный ключ для JWT
+JWT_SECRET=SecretKey                 # Секретный ключ для JWT
 JWT_ALGORITHM="HS256"                # Алгоритм JWT
 JWT_EXPIRY="60m"                     # Время жизни токена
 JWT_REFRESH_EXPIRY="43200m"          # Время жизни refresh токена
@@ -190,15 +190,3 @@ task-api/
 - `POST /v1/tasks` - Создание новой задачи
 - `PUT /v1/tasks/{id}` - Обновление задачи
 - `DELETE /v1/tasks/{id}` - Удаление задачи
-
-## Разработка
-
-### Запуск тестов
-```bash
-go test ./...
-```
-
-### Создание миграций
-```bash
-migrate create -ext sql -dir migrations -seq migration_name
-```
