@@ -1,0 +1,1 @@
+DROP TABLE IF EXISTS tasks.tasks_tags;

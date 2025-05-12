@@ -1,0 +1,857 @@
+basePath: /api/v1
+definitions:
+  auth.LoginRequest:
+    properties:
+      email:
+        type: string
+      password:
+        type: string
+    required:
+    - email
+    - password
+    type: object
+  auth.LoginResponse:
+    properties:
+      access_token:
+        type: string
+      refresh_token:
+        type: string
+    type: object
+  auth.MeResponse:
+    properties:
+      created_at:
+        type: string
+      email:
+        type: string
+      id:
+        type: string
+      name:
+        type: string
+    type: object
+  auth.RefreshRequest:
+    properties:
+      refresh_token:
+        type: string
+    required:
+    - refresh_token
+    type: object
+  comment.Author:
+    properties:
+      email:
+        type: string
+      id:
+        type: string
+      name:
+        type: string
+    type: object
+  comment.CommentResponse:
+    properties:
+      author:
+        $ref: '#/definitions/comment.Author'
+      content:
+        type: string
+      created_at:
+        type: string
+      id:
+        type: string
+      task_id:
+        type: string
+      updated_at:
+        type: string
+    type: object
+  comment.CreateCommentRequest:
+    properties:
+      author:
+        type: string
+      content:
+        type: string
+      task_id:
+        type: string
+    required:
+    - author
+    - content
+    - task_id
+    type: object
+  comment.UpdateCommentRequest:
+    properties:
+      content:
+        type: string
+    required:
+    - content
+    type: object
+  tag.CreateTagRequest:
+    properties:
+      title:
+        type: string
+    type: object
+  tag.TagResponse:
+    properties:
+      created_at:
+        type: string
+      id:
+        type: string
+      title:
+        type: string
+      updated_at:
+        type: string
+    type: object
+  tag.UpdateTagRequest:
+    properties:
+      title:
+        type: string
+    type: object
+  task.CreateTaskRequest:
+    properties:
+      description:
+        type: string
+      title:
+        type: string
+    required:
+    - description
+    - title
+    type: object
+  task.Creator:
+    properties:
+      email:
+        type: string
+      id:
+        type: string
+      name:
+        type: string
+    type: object
+  task.TagRequest:
+    properties:
+      id:
+        type: string
+    required:
+    - id
+    type: object
+  task.Tags:
+    properties:
+      id:
+        type: string
+      title:
+        type: string
+    type: object
+  task.TaskAllResponse:
+    properties:
+      created_at:
+        type: string
+      description:
+        type: string
+      id:
+        type: string
+      status:
+        type: string
+      tags:
+        items:
+          $ref: '#/definitions/task.Tags'
+        type: array
+      title:
+        type: string
+      updated_at:
+        type: string
+    type: object
+  task.TaskResponse:
+    properties:
+      comments:
+        items:
+          $ref: '#/definitions/comment.CommentResponse'
+        type: array
+      created_at:
+        type: string
+      created_by:
+        $ref: '#/definitions/task.Creator'
+      description:
+        type: string
+      id:
+        type: string
+      status:
+        type: string
+      tags:
+        items:
+          $ref: '#/definitions/task.Tags'
+        type: array
+      title:
+        type: string
+      updated_at:
+        type: string
+    type: object
+  task.UpdateTaskRequest:
+    properties:
+      description:
+        type: string
+      status:
+        type: string
+      title:
+        type: string
+    required:
+    - description
+    - status
+    - title
+    type: object
+  user.CreateUserRequest:
+    properties:
+      email:
+        type: string
+      name:
+        type: string
+      password:
+        type: string
+    type: object
+  user.UpdateUserRequest:
+    properties:
+      email:
+        type: string
+      name:
+        type: string
+      password:
+        type: string
+    type: object
+  user.UserResponse:
+    properties:
+      created_at:
+        type: string
+      email:
+        type: string
+      id:
+        type: string
+      name:
+        type: string
+      password:
+        type: string
+      updated_at:
+        type: string
+    type: object
+host: localhost:8080
+info:
+  contact: {}
+  description: API для управления задачами
+  title: Task API
+  version: "1.0"
+paths:
+  /auth/login:
+    post:
+      consumes:
+      - application/json
+      description: Проверка email и пароля. Возвращает access и refresh токены.
+      parameters:
+      - description: Данные пользователя для входа
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/auth.LoginRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/auth.LoginResponse'
+      summary: Аутентификация пользователя
+      tags:
+      - auth
+  /auth/logout:
+    post:
+      description: Добавляет access-токен в чёрный список для деактивации. Требует
+        авторизации.
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Logged out successfully
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Выход пользователя
+      tags:
+      - auth
+  /auth/me:
+    post:
+      description: Возвращает данные текущего пользователя
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/auth.MeResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Get current user
+      tags:
+      - auth
+  /auth/refresh:
+    post:
+      consumes:
+      - application/json
+      description: Обновляет access token используя refresh token
+      parameters:
+      - description: Refresh Token
+        in: body
+        name: refreshToken
+        required: true
+        schema:
+          $ref: '#/definitions/auth.RefreshRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/auth.LoginResponse'
+      security:
+      - BearerAuth: []
+      summary: Refresh access token
+      tags:
+      - auth
+  /auth/registration:
+    post:
+      consumes:
+      - application/json
+      description: Регистрирует нового пользователя
+      parameters:
+      - description: New user data
+        in: body
+        name: user
+        required: true
+        schema:
+          $ref: '#/definitions/user.CreateUserRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/user.UserResponse'
+      summary: User Registration
+      tags:
+      - auth
+  /comments:
+    get:
+      consumes:
+      - application/json
+      description: Возвращает все комментарии, доступные пользователю
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/comment.CommentResponse'
+            type: array
+      security:
+      - BearerAuth: []
+      summary: Получить все комментарии
+      tags:
+      - comments
+    post:
+      consumes:
+      - application/json
+      description: Создаёт новый комментарий к задаче
+      parameters:
+      - description: Данные комментария
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/comment.CreateCommentRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/comment.CommentResponse'
+      security:
+      - BearerAuth: []
+      summary: Создать комментарий
+      tags:
+      - comments
+  /comments/{id}:
+    delete:
+      consumes:
+      - application/json
+      description: Удаляет комментарий по ID
+      parameters:
+      - description: ID комментария
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Удалить комментарий
+      tags:
+      - comments
+    get:
+      consumes:
+      - application/json
+      description: Возвращает комментарий по его ID
+      parameters:
+      - description: ID комментария
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/comment.CommentResponse'
+      security:
+      - BearerAuth: []
+      summary: Получить комментарий по ID
+      tags:
+      - comments
+    put:
+      consumes:
+      - application/json
+      description: Обновляет содержимое комментария по его ID
+      parameters:
+      - description: ID комментария
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Новые данные комментария
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/comment.UpdateCommentRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/comment.CommentResponse'
+      security:
+      - BearerAuth: []
+      summary: Обновить комментарий
+      tags:
+      - comments
+  /tags:
+    get:
+      consumes:
+      - application/json
+      description: Получает список всех тегов пользователя
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/tag.TagResponse'
+            type: array
+      security:
+      - BearerAuth: []
+      summary: Получить все теги
+      tags:
+      - tags
+    post:
+      consumes:
+      - application/json
+      description: Создаёт новый тег
+      parameters:
+      - description: Данные нового тега
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/tag.CreateTagRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/tag.TagResponse'
+      security:
+      - BearerAuth: []
+      summary: Создать тег
+      tags:
+      - tags
+  /tags/{id}:
+    delete:
+      consumes:
+      - application/json
+      description: Удаляет тег по ID
+      parameters:
+      - description: ID тега
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Удалить тег
+      tags:
+      - tags
+    get:
+      consumes:
+      - application/json
+      description: Получает тег по ID
+      parameters:
+      - description: ID тега
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/tag.TagResponse'
+      security:
+      - BearerAuth: []
+      summary: Получить тег
+      tags:
+      - tags
+    put:
+      consumes:
+      - application/json
+      description: Обновляет тег по ID
+      parameters:
+      - description: ID тега
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Новые данные тега
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/tag.UpdateTagRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/tag.TagResponse'
+      security:
+      - BearerAuth: []
+      summary: Обновить тег
+      tags:
+      - tags
+  /tasks:
+    get:
+      consumes:
+      - application/json
+      description: Получение всех задач текущего пользователя
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/task.TaskAllResponse'
+            type: array
+      security:
+      - BearerAuth: []
+      summary: Получить список задач
+      tags:
+      - tasks
+    post:
+      consumes:
+      - application/json
+      description: Создание новой задачи пользователем
+      parameters:
+      - description: Данные задачи
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/task.CreateTaskRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/task.TaskResponse'
+      security:
+      - BearerAuth: []
+      summary: Создать задачу
+      tags:
+      - tasks
+  /tasks/{id}:
+    delete:
+      consumes:
+      - application/json
+      description: Удаление задачи по ID
+      parameters:
+      - description: ID задачи
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Удалить задачу
+      tags:
+      - tasks
+    get:
+      consumes:
+      - application/json
+      description: Получение задачи по ID
+      parameters:
+      - description: ID задачи
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/task.TaskResponse'
+      security:
+      - BearerAuth: []
+      summary: Получить задачу
+      tags:
+      - tasks
+    put:
+      consumes:
+      - application/json
+      description: Обновление существующей задачи по ID
+      parameters:
+      - description: ID задачи
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Новые данные задачи
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/task.UpdateTaskRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/task.TaskResponse'
+      security:
+      - BearerAuth: []
+      summary: Обновить задачу
+      tags:
+      - tasks
+  /tasks/{id}/tags:
+    delete:
+      consumes:
+      - application/json
+      description: Удаление тегов из задачи
+      parameters:
+      - description: ID задачи
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Список тегов для удаления
+        in: body
+        name: request
+        required: true
+        schema:
+          items:
+            $ref: '#/definitions/task.TagRequest'
+          type: array
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Удалить теги у задачи
+      tags:
+      - tasks
+    post:
+      consumes:
+      - application/json
+      description: Привязка тегов к задаче
+      parameters:
+      - description: ID задачи
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Список тегов
+        in: body
+        name: request
+        required: true
+        schema:
+          items:
+            $ref: '#/definitions/task.TagRequest'
+          type: array
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Добавить теги к задаче
+      tags:
+      - tasks
+  /users/{id}:
+    delete:
+      consumes:
+      - application/json
+      description: Удаляет пользователя по его ID
+      parameters:
+      - description: UUID пользователя
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Удалить пользователя
+      tags:
+      - users
+    get:
+      consumes:
+      - application/json
+      description: Возвращает пользователя по его UUID
+      parameters:
+      - description: UUID пользователя
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/user.UserResponse'
+      security:
+      - BearerAuth: []
+      summary: Получить пользователя по ID
+      tags:
+      - users
+    put:
+      consumes:
+      - application/json
+      description: Обновляет данные пользователя по его ID
+      parameters:
+      - description: UUID пользователя
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Данные пользователя
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/user.UpdateUserRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/user.UserResponse'
+      security:
+      - BearerAuth: []
+      summary: Обновить пользователя
+      tags:
+      - users
+  /users/email/{email}:
+    get:
+      consumes:
+      - application/json
+      description: Возвращает пользователя по email-адресу
+      parameters:
+      - description: Email пользователя
+        in: path
+        name: email
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/user.UserResponse'
+      security:
+      - BearerAuth: []
+      summary: Получить пользователя по email
+      tags:
+      - users
+securityDefinitions:
+  BearerAuth:
+    in: header
+    name: Authorization
+    type: apiKey
+swagger: "2.0"

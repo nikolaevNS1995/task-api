@@ -1,0 +1,35 @@
+version: '3.8'
+
+services:
+  app:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile
+    ports:
+      - "8080:8080"
+    env_file:
+      - ./.env
+    volumes:
+      - .env:/app/.env
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+  postgres:
+    image: postgis/postgis:16-3.4
+    environment:
+      POSTGRES_DB: "task_db"
+      POSTGRES_USER: "task_user"
+      POSTGRES_PASSWORD: "root"
+    ports:
+      - "5434:5432"
+    volumes:
+      - ./docker/data/pg_volume:/var/lib/postgresql/data
+    restart: unless-stopped
+    container_name: task_pg
+    healthcheck:
+      test: [ "CMD", "pg_isready", "-U", "task_user", "-d", "task_db" ]
+      interval: 10s
+      retries: 5
+      start_period: 10s
+      timeout: 5s
